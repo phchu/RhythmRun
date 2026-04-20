@@ -1,0 +1,196 @@
+@import "tailwindcss";
+@import "leaflet/dist/leaflet.css";
+
+@theme {
+  /* Dark Sport Theme */
+  --color-bg-primary: #0D0D0D;
+  --color-bg-secondary: #161616;
+  --color-bg-card: #1C1C1E;
+  --color-bg-elevated: #2C2C2E;
+  --color-bg-input: #1C1C1E;
+
+  /* Accent Colors */
+  --color-accent-red: #FF3B30;
+  --color-accent-green: #34C759;
+  --color-accent-blue: #0A84FF;
+  --color-accent-cyan: #00D4AA;
+  --color-accent-orange: #FF9500;
+  --color-accent-yellow: #FFD60A;
+  --color-accent-pink: #FF375F;
+
+  /* Text */
+  --color-text-primary: #FFFFFF;
+  --color-text-secondary: #8E8E93;
+  --color-text-tertiary: #48484A;
+  --color-text-muted: #636366;
+
+  /* Borders */
+  --color-border: #2C2C2E;
+  --color-border-subtle: #1C1C1E;
+
+  /* Functional */
+  --color-success: #34C759;
+  --color-warning: #FF9500;
+  --color-error: #FF3B30;
+
+  /* Tab bar */
+  --tabbar-height: 5rem;
+
+  /* Font families — referenced via Tailwind in components */
+  --font-display: 'Outfit', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+}
+
+@layer base {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    font-family: var(--font-body);
+    background-color: var(--color-bg-primary);
+    color: var(--color-text-primary);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overscroll-behavior: none;
+    user-select: none;
+  }
+
+  /* Safe area for iOS notch */
+  html {
+    --safe-area-top: env(safe-area-inset-top, 0px);
+    --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 0;
+    display: none;
+  }
+}
+
+@layer components {
+  /* Card component */
+  .card {
+    background-color: var(--color-bg-card);
+    border-radius: 1rem;
+    padding: 1.25rem;
+  }
+
+  .card-elevated {
+    background-color: var(--color-bg-elevated);
+    border-radius: 1rem;
+    padding: 1.25rem;
+  }
+
+  /* Stat display number */
+  .stat-value {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+
+  .stat-value-lg {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 3.5rem;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+
+  .stat-value-xl {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: 5rem;
+    letter-spacing: -0.04em;
+    line-height: 1;
+  }
+
+  .stat-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  /* Glow effects */
+  .glow-red {
+    box-shadow: 0 0 30px rgba(255, 59, 48, 0.3), 0 0 60px rgba(255, 59, 48, 0.1);
+  }
+
+  .glow-green {
+    box-shadow: 0 0 30px rgba(52, 199, 89, 0.3), 0 0 60px rgba(52, 199, 89, 0.1);
+  }
+
+  .glow-cyan {
+    box-shadow: 0 0 30px rgba(0, 212, 170, 0.3), 0 0 60px rgba(0, 212, 170, 0.1);
+  }
+
+  /* Pulse animation for run button */
+  @keyframes pulse-ring {
+    0% { transform: scale(1); opacity: 0.6; }
+    100% { transform: scale(1.4); opacity: 0; }
+  }
+
+  .pulse-ring {
+    animation: pulse-ring 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  }
+
+  /* Count-up animation */
+  @keyframes count-slide-up {
+    from { transform: translateY(100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  .animate-slide-up {
+    animation: count-slide-up 0.3s ease-out;
+  }
+
+  /* Stagger fade-in for lists */
+  @keyframes fade-in-up {
+    from { transform: translateY(12px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  .animate-fade-in-up {
+    animation: fade-in-up 0.4s ease-out both;
+  }
+
+  /* Shimmer loading effect */
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+
+  .shimmer {
+    background: linear-gradient(90deg, var(--color-bg-card) 25%, var(--color-bg-elevated) 50%, var(--color-bg-card) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  /* Glass effect */
+  .glass {
+    background: rgba(28, 28, 30, 0.75);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  /* Tab bar specific styling */
+  .tab-bar {
+    background: rgba(13, 13, 13, 0.92);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+  }
+}
+
+/* Leaflet map dark mode overrides */
+.leaflet-container {
+  background: var(--color-bg-primary) !important;
+}
+
+.leaflet-control-attribution {
+  display: none !important;
+}
