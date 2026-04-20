@@ -39,27 +39,32 @@
     - `@capacitor-community/text-to-speech`: 本地化語音合成。
 - **Data Persistence**: LocalStorage 緩存與雲端同步。
 
-## 🚀 快速開始
+## 📲 iOS CLI 開發指引 (進階)
 
-### 1. 安裝依賴
+本專案已完成自動化配置，您可以全程透過終端機進行 iOS 的開發與部署，無需手動操作 Xcode GUI。
+
+### 1. 自動化建置與執行
+我們提供了一個整合指令碼，可自動編譯並在模擬器中啟動 App：
 ```bash
-npm install
+# 賦予執行權限
+chmod +x scripts/ios-build-run.sh
+
+# 執行建置與部署
+./scripts/ios-build-run.sh
 ```
 
-### 2. 環境設定
-建立 `.env` 檔案並填入 Firebase 資訊：
-```env
-VITE_FIREBASE_API_KEY=your_key
-VITE_FIREBASE_AUTH_DOMAIN=your_domain
-VITE_FIREBASE_PROJECT_ID=your_id
-...
-```
+### 2. 手動常用指令
+如果您想手動控制流程，可以使用以下指令：
 
-### 3. 啟動開發伺服器
-```bash
-npm run dev
-```
+- **同步資源**：`npx cap sync ios`
+- **使用 xcodebuild 編譯**：
+  ```bash
+  xcodebuild -workspace ios/App/App.xcworkspace -scheme App -sdk iphonesimulator -configuration Debug build
+  ```
+- **控制模擬器**：
+  - 列出運行中模擬器：`xcrun simctl list devices booted`
+  - 啟動特定 App：`xcrun simctl launch booted com.phchu.rhythmrun`
 
 ---
 
-*本專案目前由 Antigravity AI 輔助開發，致力於提供最極致的移動端跑步體驗。*
+*本專案已程式化開啟 Background Modes，支援背景定位與音訊播放。*
