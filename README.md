@@ -56,14 +56,82 @@ chmod +x scripts/ios-build-run.sh
 ### 2. 手動常用指令
 如果您想手動控制流程，可以使用以下指令：
 
-- **同步資源**：`npx cap sync ios`
-- **使用 xcodebuild 編譯**：
-  ```bash
-  xcodebuild -workspace ios/App/App.xcworkspace -scheme App -sdk iphonesimulator -configuration Debug build
-  ```
-- **控制模擬器**：
-  - 列出運行中模擬器：`xcrun simctl list devices booted`
-  - 啟動特定 App：`xcrun simctl launch booted com.phchu.rhythmrun`
+# RhythmRun - 專業跑步追蹤與節奏訓練 App
+
+RhythmRun 是一款結合了 GPS 軌跡記錄、步頻節奏器與雲端同步功能的專業跑步應用程式。
+
+## 🚀 快速開始 (環境建置)
+
+如果您在新的電腦上下載此專案，請依照以下步驟操作：
+
+### 1. 前置必要條件 (Prerequisites)
+- **Node.js**: 建議版本 v22.17.0 以上
+- **Xcode**: 安裝最新版本 (用於建置 iOS App)
+- **CocoaPods**: iOS 插件管理工具 (透過 `sudo gem install cocoapods` 安裝)
+- **Firebase 帳號**: 需準備一個 Firebase 專案
+
+### 2. 初始化專案
+```bash
+# 安裝相依套件
+npm install
+
+# 建立環境變數
+cp .env.example .env
+# 💡 請編輯 .env 並填入您的 Firebase 密鑰
+```
+
+### 3. Firebase 設定
+- **Authentication**: 開啟「電子郵件/密碼」登入方式。
+- **Cloud Firestore**: 
+  - 建立資料庫（建議選擇「原生模式 Native Mode」）。
+  - 套用以下 **安全規則 (Rules)**：
+    ```javascript
+    rules_version = '2';
+    service cloud.firestore {
+      match /databases/{database}/documents {
+        match /users/{userId}/{document=**} {
+          allow read, write: if request.auth != null && request.auth.uid == userId;
+        }
+      }
+    }
+    ```
+
+### 4. 建置並執行 iOS App
+```bash
+# 1. 建置前端網頁資源
+npm run build
+
+# 2. 同步資源至 iOS 專案
+npx cap sync ios
+
+# 3. 開啟 Xcode 進行編譯與安裝
+open ios/App/App.xcworkspace
+```
+
+---
+
+## 🛠️ 技術架構說明
+
+### 核心技術棧
+- **Frontend**: React + Vite (高效能前端框架)
+- **Mobile Environment**: Capacitor 6 (將 Web 轉化為 iOS 原生應用)
+- **Backend/DB**: Firebase Auth + Cloud Firestore (即時雲端同步)
+- **Styling**: Vanilla CSS (精緻深色模式介面)
+
+### 同步邏輯 (Sync Engine)
+本專案採用了「主動式雲端同步」架構：
+- **本地優先**：跑步數據優先儲存於手機原生空間，確保離線也能記錄。
+- **自動推播**：當 App 偵測到網路連線且有新紀錄時，會自動在背景將資料同步至 Firestore。
+- **除重機制**：內建「10 分鐘模糊除重」演算法，防止在不穩定網路環境下產生重複數據。
+
+---
+
+## 📦 版本說明
+- **v2.2.0 (Stable)**:
+  - 實作了跨裝置雲端同步。
+  - 優化了資料庫安全存取規則。
+  - 移除所有除錯日誌，提升 UI 質感。
+  - 修正了在 iOS 實機上的資料持久化問題。
 
 ---
 

@@ -1,5 +1,9 @@
 {
   "appId": "com.phchu.rhythmrun",
   "appName": "RhythmRun",
-  "webDir": "dist"
+  "webDir": "dist",
+  "server": {
+    "iosScheme": "https",
+    "androidScheme": "https"
+  }
 }

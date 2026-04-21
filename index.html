@@ -12,6 +12,23 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
     <title>RhythmRun</title>
+    <script>
+      window.onerror = function(msg, url, line, col, error) {
+        // More robust check for generic Script error
+        if (msg && msg.toLowerCase().includes('script error')) {
+          console.warn('Suppressing generic "Script error" popup. UI is already visible.');
+          return; 
+        }
+        var str = msg;
+        if(error) str += '\n' + error.stack;
+        alert('Global Error: ' + str);
+      };
+      window.addEventListener('unhandledrejection', function(e) {
+        let msg = (e.reason ? e.reason.message || e.reason : '');
+        if (msg && msg.toString().toLowerCase().includes('script error')) return;
+        alert('Unhandled Rejection: ' + msg);
+      });
+    </script>
   </head>
   <body>
     <div id="root"></div>

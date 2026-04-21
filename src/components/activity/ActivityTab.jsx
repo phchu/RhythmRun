@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getRuns, deleteRun } from '../../services/DatabaseService';
-import { MapPin, TrendingUp, Loader2, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { MapPin, TrendingUp, Loader2, AlertTriangle, CheckCircle2, Info, X } from 'lucide-react';
 import ActivityCard from './ActivityCard';
 import WeeklySummary from './WeeklySummary';
 
@@ -18,35 +18,42 @@ export default function ActivityTab() {
   const [runToDelete, setRunToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showToast, setShowToast] = useState(false);
+  const [syncStatus, setSyncStatus] = useState(null); // null, 'syncing', 'success', 'error'
 
   useEffect(() => {
-    if (user) {
-      // 1. Instant load from local cache for best UX
-      const local = localStorage.getItem(`rhythmrun_runs_${user.uid}`);
-      if (local) {
-        try {
-          const parsed = JSON.parse(local).map(r => ({...r, createdAt: new Date(r.createdAt)}));
-          setRuns(parsed);
-          setLoading(false); 
-        } catch(e) {}
+    const initLoad = async () => {
+      if (user) {
+        await loadRuns();
+      } else {
+        setLoading(false);
+      }
+    };
+    initLoad();
+  }, [user?.uid]);
+
+  const loadRuns = async (isManual = false) => {
+    try {
+      setLoading(true);
+      setError(null);
+      if (isManual) {
+        setSyncStatus('syncing');
+        setShowToast(true);
       }
       
-      // 2. Then trigger background sync/fetch
-      loadRuns();
-    } else {
-      setLoading(false);
-    }
-  }, [user]);
-
-  const loadRuns = async () => {
-    try {
-      if (runs.length === 0) setLoading(true); // Only show loader if no local data
-      setError(null);
       const data = await getRuns(user.uid);
       setRuns(data);
+      
+      if (isManual) {
+        setSyncStatus('success');
+        setTimeout(() => {
+          setShowToast(false);
+          setSyncStatus(null);
+        }, 2000);
+      }
     } catch (error) {
       console.error('Error loading runs:', error);
       setError(error.message || '載入失敗');
+      if (isManual) setSyncStatus('error');
     } finally {
       setLoading(false);
     }
@@ -98,10 +105,24 @@ export default function ActivityTab() {
   return (
     <div className="flex flex-col min-h-screen bg-bg-primary">
       {/* Header */}
-      <header className="px-5 pt-14 pb-4" style={{ paddingTop: 'calc(var(--safe-area-top) + 3rem)' }}>
+      <header className="px-5 pt-14 pb-4 flex items-center justify-between" style={{ paddingTop: 'calc(var(--safe-area-top) + 3rem)' }}>
         <h1 className="text-2xl font-bold text-text-primary" style={{ fontFamily: 'var(--font-display)' }}>
           活動
         </h1>
+        <button 
+          onClick={() => loadRuns(true)}
+          disabled={loading}
+          className={`p-2 transition-all active:scale-90 ${
+            syncStatus === 'success' ? 'text-accent-green' : 
+            syncStatus === 'error' ? 'text-error' : 'text-text-secondary'
+          }`}
+        >
+          {syncStatus === 'syncing' ? (
+            <Loader2 size={20} className="animate-spin text-accent-red" />
+          ) : (
+            <TrendingUp size={20} className={syncStatus === 'success' ? 'animate-bounce' : ''} />
+          )}
+        </button>
       </header>
 
       {/* Weekly Summary */}
@@ -125,11 +146,13 @@ export default function ActivityTab() {
             </button>
           </div>
         ) : runs.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-64 gap-4">
+          <div className="flex flex-col items-center justify-center h-80 gap-4 transition-all animate-fade-in">
             <div className="w-20 h-20 rounded-full bg-bg-card flex items-center justify-center">
               <MapPin size={32} className="text-text-tertiary" />
             </div>
-            <p className="text-text-secondary text-base">還沒有跑步記錄</p>
+            <div className="text-center">
+              <p className="text-text-secondary text-base mb-1">還沒有跑步記錄</p>
+            </div>
             <button
               onClick={() => navigate('/run')}
               className="px-8 py-3 bg-accent-red text-white rounded-full font-semibold text-sm glow-red"
@@ -201,12 +224,18 @@ export default function ActivityTab() {
         </div>
       )}
 
-      {/* Success Toast */}
+      {/* Success/Sync Toast */}
       {showToast && (
         <div className="fixed top-12 left-1/2 -translate-x-1/2 z-[110] animate-bounce-in">
-          <div className="bg-success text-white px-6 py-3 rounded-full flex items-center gap-2 shadow-xl">
-            <CheckCircle2 size={18} />
-            <span className="text-sm font-bold">紀錄已成功刪除</span>
+          <div className={`${
+            syncStatus === 'error' ? 'bg-error' : 
+            syncStatus === 'syncing' ? 'bg-accent-blue' : 'bg-success'
+          } text-white px-6 py-3 rounded-full flex items-center gap-2 shadow-xl`}>
+            {syncStatus === 'syncing' ? <Loader2 size={18} className="animate-spin" /> : <CheckCircle2 size={18} />}
+            <span className="text-sm font-bold">
+              {syncStatus === 'syncing' ? '正在同步雲端紀錄...' : 
+               syncStatus === 'error' ? '同步失敗，請檢查網路' : '紀錄已更新'}
+            </span>
           </div>
         </div>
       )}

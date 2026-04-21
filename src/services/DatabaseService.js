@@ -1,46 +1,94 @@
 import { collection, addDoc, getDocs, deleteDoc, doc, query, orderBy, serverTimestamp } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { initFirebase } from '../lib/firebase';
+import { Preferences } from '@capacitor/preferences';
 
-// ---- Local Storage (The source of truth for offline/missing DB) ----
-const LS_KEY = 'rhythmrun_runs';
-
-const getLocalRuns = (uid) => {
-  try {
-    const raw = localStorage.getItem(`${LS_KEY}_${uid}`);
-    if (!raw) return [];
-    return JSON.parse(raw).map(r => ({ ...r, createdAt: new Date(r.createdAt) }));
-  } catch { return []; }
+// --- Diagnostic Log System ---
+const addLog = (msg) => {
+  const time = new Date().toLocaleTimeString();
+  window.__RHYTHM_LOGS?.push(`[DB] [${time}] ${msg}`);
 };
 
-const saveLocalRuns = (uid, runs) => {
+// ---- Native Storage (Preferences) ----
+const LS_KEY = 'rhythmrun_runs';
+
+/**
+ * Migration helper: Move data from localStorage to Native Preferences if needed
+ */
+const migrateFromLocalStorage = async (uid) => {
   try {
-    localStorage.setItem(`${LS_KEY}_${uid}`, JSON.stringify(runs));
+    const legacyKey = `rhythmrun_runs_${uid}`;
+    const raw = localStorage.getItem(legacyKey);
+    if (raw) {
+      addLog("Found legacy localStorage data. Migrating to Native...");
+      await Preferences.set({
+        key: `${LS_KEY}_${uid}`,
+        value: raw
+      });
+      localStorage.removeItem(legacyKey);
+      addLog("Migration SUCCESS");
+    }
   } catch (e) {
-    console.warn('[DB] localStorage save failed:', e);
+    addLog(`Migration FAILED: ${e.message}`);
+  }
+};
+
+const getLocalRuns = async (uid) => {
+  try {
+    // 1. One-time migration check
+    await migrateFromLocalStorage(uid);
+
+    // 2. Get from Native Preferences
+    const { value } = await Preferences.get({ key: `${LS_KEY}_${uid}` });
+    if (!value) return [];
+    
+    return JSON.parse(value).map(r => ({ ...r, createdAt: new Date(r.createdAt) }));
+  } catch (e) {
+    addLog(`getLocalRuns ERROR: ${e.message}`);
+    return [];
+  }
+};
+
+const saveLocalRuns = async (uid, runs) => {
+  try {
+    await Preferences.set({
+      key: `${LS_KEY}_${uid}`,
+      value: JSON.stringify(runs)
+    });
+    addLog(`Saved ${runs.length} runs to Native Storage`);
+  } catch (e) {
+    addLog(`saveLocalRuns ERROR: ${e.message}`);
+    console.warn('[DB] Preferences save failed:', e);
   }
 };
 
 // ---- Firestore availability cache ----
 let _firestoreState = 'unknown'; // 'unknown', 'online', 'offline'
+let _lastUid = null;
 
 /**
  * Attempts a fast Firestore check. 
- * If it doesn't resolve in 1.5s, we assume offline/slow and use local.
  */
 const checkConnectivity = async (uid) => {
-  if (_firestoreState === 'offline') return false;
+  if (uid !== _lastUid) {
+    _firestoreState = 'unknown';
+    _lastUid = uid;
+  }
+  if (_firestoreState === 'online') return true;
   
   try {
+    const { db } = await initFirebase();
+    if (!db) return false;
+
     const ref = collection(db, `users/${uid}/runs`);
     await Promise.race([
       getDocs(query(ref, orderBy('createdAt', 'desc'))).catch(() => getDocs(ref)),
-      new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 1500))
+      new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 5000))
     ]);
     _firestoreState = 'online';
     return true;
   } catch (e) {
     _firestoreState = 'offline';
-    console.warn('[DB] Firestore unreachable or missing DB. Switching to Local Mode.');
+    addLog(`Firestore unreachable: ${e.message}`);
     return false;
   }
 };
@@ -48,21 +96,21 @@ const checkConnectivity = async (uid) => {
 // ---- Public API ----
 
 export const getRuns = async (uid) => {
-  console.log('[DB] Fetching runs...');
+  const { db } = await initFirebase();
+  const projectId = db?.app?.options?.projectId || 'Unknown';
+  addLog(`Fetching runs for UID: ...${uid?.slice(-5)} (Project: ${projectId})`);
   
-  // 1. Immediately get local data for instant UI
-  const localData = getLocalRuns(uid);
+  // Get local cache
+  const localData = await getLocalRuns(uid);
   
-  // 2. If we already know we are offline, return local immediately
-  if (_firestoreState === 'offline') {
+  // Try to connect
+  const isOnline = await checkConnectivity(uid);
+  if (!isOnline) {
+    addLog("Working in Local Mode (Offline)");
     return localData;
   }
-
-  // 3. Try to get Firestore data with a tight timeout
   try {
-    const isOnline = await checkConnectivity(uid);
-    if (!isOnline) return localData;
-
+    const { db } = await initFirebase();
     const ref = collection(db, `users/${uid}/runs`);
     let snap;
     try {
@@ -85,23 +133,89 @@ export const getRuns = async (uid) => {
       };
     });
 
-    // Merge logic: ensure local-only runs are preserved
+    // Merge logic
     const fsIds = new Set(firestoreRuns.map(r => r.id));
-    const localOnly = localData.filter(r => !fsIds.has(r.id));
-    const merged = [...firestoreRuns, ...localOnly].sort((a, b) => b.createdAt - a.createdAt);
+    const merged = [...firestoreRuns];
+    // Only push local records that aren't ALREADY being pushed
+    const localOnly = localData.filter(r => r.id.startsWith('local_') && !_activeSyncs.has(r.id));
     
-    // Self-healing: Update local cache with Firestore data
-    saveLocalRuns(uid, merged);
+    if (localOnly.length > 0) {
+      localOnly.forEach(r => _activeSyncs.add(r.id));
+      addLog(`Syncing ${localOnly.length} items in background...`);
+      (async () => {
+        await new Promise(r => setTimeout(r, 2000));
+        for (const run of localOnly) {
+          try {
+            await Promise.race([
+              addDoc(ref, {
+                distance: run.distance,
+                duration: run.duration,
+                avgPace: run.avgPace,
+                coordinates: run.coordinates,
+                splits: run.splits,
+                bpmUsed: run.bpmUsed,
+                createdAt: serverTimestamp()
+              }).then(docRef => {
+                run.id = docRef.id;
+                addLog(`Cloud Sync Success: ${docRef.id}`);
+              }),
+              new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 10000))
+            ]);
+          } catch (e) {
+            addLog(`Cloud Sync Fail: ${e.message}`);
+          } finally {
+            _activeSyncs.delete(run.id);
+          }
+        }
+        const latest = await getLocalRuns(uid);
+        await saveLocalRuns(uid, latest);
+      })();
+    }
+
+    // FINAL DEDUPLICATION: Merge records that have same 10-minute block, distance and duration
+    // This is very aggressive to clean up sync-artifacts during the debugging phase
+    const uniqueMap = new Map();
+    [...merged, ...localOnly].forEach(run => {
+      let d;
+      if (run.createdAt && typeof run.createdAt.toDate === 'function') {
+        d = run.createdAt.toDate();
+      } else {
+        d = new Date(run.createdAt);
+      }
+      
+      if (isNaN(d.getTime())) return; // Skip invalid dates
+
+      // Deduplicate by 10-minute buckets: standard for cleaning sync bursts
+      const minutes = d.getMinutes();
+      const roundedMinutes = Math.floor(minutes / 10) * 10;
+      const timeKey = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}-${d.getHours()}-${roundedMinutes}`;
+      
+      // Composite key: Time bucket + Distance (rounded to 2 decimal) + Duration
+      const distKey = Math.round((run.distance || 0) * 100) / 100;
+      const key = `${timeKey}_${distKey}_${run.duration}`;
+      
+      if (!uniqueMap.has(key)) {
+        uniqueMap.set(key, run);
+      }
+    });
+
+    const finalSorted = Array.from(uniqueMap.values()).sort((a, b) => {
+      const timeA = a.createdAt?.seconds ? a.createdAt.seconds * 1000 : new Date(a.createdAt).getTime();
+      const timeB = b.createdAt?.seconds ? b.createdAt.seconds * 1000 : new Date(b.createdAt).getTime();
+      return timeB - timeA;
+    });
+    await saveLocalRuns(uid, finalSorted);
     
-    return merged;
+    addLog(`Load complete: ${finalSorted.length} unique items`);
+    return finalSorted;
   } catch (e) {
-    console.warn('[DB] getRuns failed, returning local:', e.message);
+    addLog(`getRuns failed: ${e.message}`);
     return localData;
   }
 };
 
 export const saveRun = async (uid, runData) => {
-  console.log('[DB] Saving run...');
+  addLog('Saving new run...');
 
   const run = {
     id: `local_${Date.now()}`,
@@ -114,14 +228,17 @@ export const saveRun = async (uid, runData) => {
     createdAt: new Date(),
   };
 
-  // 1. Save to local storage first (instant)
-  const local = getLocalRuns(uid);
+  // 1. Save to Native storage first
+  const local = await getLocalRuns(uid);
   local.unshift(run);
-  saveLocalRuns(uid, local);
+  await saveLocalRuns(uid, local);
 
-  // 2. Try to sync to Firestore in background/online
+  // 2. Try to sync to Firestore
   if (_firestoreState !== 'offline') {
     try {
+      const { db } = await initFirebase();
+      if (!db) throw new Error("DB not ready");
+
       const ref = collection(db, `users/${uid}/runs`);
       const docRef = await addDoc(ref, {
         distance: run.distance,
@@ -132,34 +249,50 @@ export const saveRun = async (uid, runData) => {
         bpmUsed: run.bpmUsed,
         createdAt: serverTimestamp()
       });
-      // Update local ID with Firestore ID
-      const updatedLocal = getLocalRuns(uid);
+
+      // Update local ID
+      const updatedLocal = await getLocalRuns(uid);
       const index = updatedLocal.findIndex(r => r.id === run.id);
       if (index !== -1) {
         updatedLocal[index].id = docRef.id;
-        saveLocalRuns(uid, updatedLocal);
+        await saveLocalRuns(uid, updatedLocal);
       }
-      console.log('[DB] Synced to Firestore:', docRef.id);
+      addLog(`Sync SUCCESS: ${docRef.id}`);
+      return docRef.id;
     } catch (e) {
-      console.warn('[DB] Sync to Firestore failed:', e.message);
-      // We don't mark offline here yet, just log it
+      addLog(`Sync FAIL: ${e.message}`);
     }
   }
   
   return run.id;
 };
 
-export const deleteRun = async (uid, runId) => {
-  // Remove from local
-  const local = getLocalRuns(uid);
-  saveLocalRuns(uid, local.filter(r => r.id !== runId));
+export const getRun = async (uid, runId) => {
+  const local = await getLocalRuns(uid);
+  const run = local.find(r => r.id === runId);
+  if (run) return run;
 
-  // Try Firestore
+  try {
+    const all = await getRuns(uid);
+    return all.find(r => r.id === runId) || null;
+  } catch {
+    return null;
+  }
+};
+
+export const deleteRun = async (uid, runId) => {
+  const local = await getLocalRuns(uid);
+  await saveLocalRuns(uid, local.filter(r => r.id !== runId));
+
   if (_firestoreState === 'online' && !runId.startsWith('local_')) {
     try {
-      await deleteDoc(doc(db, `users/${uid}/runs`, runId));
+      const { db } = await initFirebase();
+      if (db) {
+        await deleteDoc(doc(db, `users/${uid}/runs`, runId));
+        addLog(`Delete SUCCESS: ${runId}`);
+      }
     } catch (e) {
-      console.warn('[DB] Firestore delete failed:', e.message);
+      addLog(`Delete FAIL: ${e.message}`);
     }
   }
 };
