@@ -96,16 +96,21 @@ cp .env.example .env
     }
     ```
 
-### 4. 建置並執行 iOS App
+### 4. 建置並執行 iOS/Android App
+
+#### iOS (專屬 Mac)
 ```bash
-# 1. 建置前端網頁資源
 npm run build
-
-# 2. 同步資源至 iOS 專案
 npx cap sync ios
-
-# 3. 開啟 Xcode 進行編譯與安裝
 open ios/App/App.xcworkspace
+```
+
+#### Android (Windows/Mac)
+```bash
+npm run build
+npx cap sync android
+# 使用 Android Studio 開啟 android 資料夾
+# 點擊 Build > Build APK(s) 即可產出 .apk
 ```
 
 ---
