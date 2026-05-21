@@ -12,18 +12,18 @@ appId: com.phchu.rhythmrun
 - setLocation:
     latitude: 25.0330
     longitude: 121.5654
-- delay: 1000
+- evalScript: "java.lang.Thread.sleep(1000)"
 
 # 3. 模擬電源鍵點擊以鎖定螢幕（驗證 Native 鎖屏 Activity）
 - sendKeyPress: Power
-- delay: 2000
+- evalScript: "java.lang.Thread.sleep(2000)"
 - sendKeyPress: Power
 
 # Android 向上滑動以展開 lock screen
 - swipe:
     start: 500, 1800
     end: 500, 500
-- delay: 1000
+- evalScript: "java.lang.Thread.sleep(1000)"
 
 # 4. 解鎖並暫停跑步，完成儲存流程
 - tapOn: "Pause"

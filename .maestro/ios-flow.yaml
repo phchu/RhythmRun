@@ -5,15 +5,15 @@ appId: com.phchu.rhythmrun
 
 # 1. 點擊開始跑步
 - tapOn: "Start Run"
-- delay: 1000
+- evalScript: "java.lang.Thread.sleep(1000)"
 
 # 2. 模擬退回桌面（以觸發 iOS Live Activity）
 - pressHomeButton
-- delay: 2000
+- evalScript: "java.lang.Thread.sleep(2000)"
 
 # 3. 在 iOS 模擬器中下拉通知中心 / 鎖屏畫面
 - openNotifications
-- delay: 1500
+- evalScript: "java.lang.Thread.sleep(1500)"
 
 # 4. 截圖以視覺化確認小工具中 distance & pace 之 monospacedDigit 渲染是否完全正確且無抖動
 - takeScreenshot: ios-live-activity-verification
