@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Globe, Volume2, Map, Info, Bug, ShieldCheck, 
   Wifi, WifiOff, Mail, Lock, UserPlus, LogIn, LogOut, Loader2
@@ -7,6 +8,7 @@ import { useSettings, MAP_STYLES } from '../../context/SettingsContext';
 import { useAuth } from '../../context/AuthContext';
 
 export default function SettingsTab() {
+  const navigate = useNavigate();
   const { settings, updateSettings } = useSettings();
   const { user, login, logout, signupAndLink, authError } = useAuth();
   
@@ -15,6 +17,16 @@ export default function SettingsTab() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
+  const [versionTaps, setVersionTaps] = useState(0);
+
+  const handleVersionTap = () => {
+    const next = versionTaps + 1;
+    setVersionTaps(next);
+    if (next >= 5) {
+      setVersionTaps(0);
+      navigate('/debug');
+    }
+  };
 
   const handleStyleChange = (styleId) => {
     updateSettings({ mapStyle: styleId });
@@ -267,12 +279,25 @@ export default function SettingsTab() {
               <Info size={18} className="text-text-muted" />
               <span className="text-sm text-text-primary">RhythmRun</span>
             </div>
-            <span className="text-sm text-text-muted">v2.2.0</span>
+            {/* Triple-tap version number to open Debug screen */}
+            <button onClick={handleVersionTap} className="text-sm text-text-muted active:text-accent-cyan transition-colors">
+              v2.2.0 {versionTaps > 0 && versionTaps < 5 && <span className="text-[10px] text-accent-cyan">({5 - versionTaps})</span>}
+            </button>
           </div>
-          <div className="px-4 py-4">
-            <p className="text-xs text-text-muted leading-relaxed">
-              純粹的跑步記錄與分析工具。
-            </p>
+          <div className="flex items-center justify-between px-4 py-4">
+            <div className="flex items-center gap-3">
+              <Bug size={18} className="text-red-400" />
+              <div>
+                <span className="text-sm text-text-primary">Debug Log</span>
+                <p className="text-[10px] text-text-muted">點版本號 5 次進入</p>
+              </div>
+            </div>
+            <button
+              onClick={() => navigate('/debug')}
+              className="px-3 py-1.5 bg-red-900/30 text-red-400 text-xs font-bold rounded-lg border border-red-500/20 active:scale-95 transition-all"
+            >
+              開啟
+            </button>
           </div>
         </div>
       </div>
