@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useRun } from '../../context/RunContext';
 import { useRhythm } from '../../context/RhythmContext';
 import { speak } from '../../services/VoiceService';
+import { LockScreenService } from '../../services/LockScreenService';
+import { Capacitor } from '@capacitor/core';
 import { Pause, Play, Square, Music2, Target, Plus, Minus } from 'lucide-react';
 
 const formatPace = (secPerKm) => {
@@ -42,6 +44,11 @@ export default function RunActive() {
   const goalReachedRef = useRef(false);
   const lastAnnouncedHalfKm = useRef(0);
 
+  // Request Notification Permissions for Lock Screen (Android 13+)
+  useEffect(() => {
+    LockScreenService.requestPermissions();
+  }, []);
+
   // Sync Metronome with Run Status
   useEffect(() => {
     if (isMetronomeEnabled) {
@@ -74,6 +81,90 @@ export default function RunActive() {
 
     return () => navigator.geolocation.clearWatch(watchId);
   }, [status, addLocation]);
+
+
+
+  // Listen for native media button clicks
+  useEffect(() => {
+    let listenerPromise = null;
+    
+    listenerPromise = LockScreenService.onMediaButton((action) => {
+      if (action === 'pause') {
+        pauseRun();
+      } else if (action === 'resume') {
+        resumeRun();
+      } else if (action === 'stop') {
+        pauseRun();
+        setShowStopConfirm(true);
+      }
+    });
+
+    return () => {
+      if (listenerPromise) {
+        listenerPromise.then(handle => {
+          if (handle && handle.remove) handle.remove();
+        });
+      }
+    };
+  }, [status, pauseRun, resumeRun]);
+
+  // Main UI update effect for lock screen and background polling
+  useEffect(() => {
+    // 1. Poll for background actions since Chromium might block evaluateJavascript
+    const pollBackgroundActions = async () => {
+      if (status !== 'running' && status !== 'paused') return;
+      const action = await LockScreenService.checkMediaAction();
+      if (action) {
+        console.log("Polled background media action:", action);
+        if (action === 'pause') {
+          pauseRun();
+        } else if (action === 'resume') {
+          resumeRun();
+        } else if (action === 'stop') {
+          pauseRun();
+          setShowStopConfirm(true);
+        }
+      }
+    };
+    const interval = setInterval(pollBackgroundActions, 3000);
+
+    // 2. Update the lock screen stats
+    if (status === 'running') {
+      const stats = {
+        distance,
+        duration: formatDuration(duration),
+        pace: currentPace ? formatPace(currentPace) : (avgPace ? formatPace(avgPace) : '--:--'),
+        progress: goal.type !== 'none' ? (distance / goal.value) : 0,
+        isPaused: status === 'paused'
+      };
+      
+      if (LockScreenService.activeActivityId || Capacitor.getPlatform() === 'android') {
+        LockScreenService.update(stats);
+      } else {
+        LockScreenService.start(stats);
+      }
+    } else if (status === 'paused') {
+      const stats = {
+        distance,
+        duration: formatDuration(duration),
+        pace: currentPace ? formatPace(currentPace) : (avgPace ? formatPace(avgPace) : '--:--'),
+        progress: goal.type !== 'none' ? (distance / goal.value) : 0,
+        isPaused: true
+      };
+      if (Capacitor.getPlatform() === 'android') {
+        LockScreenService.update(stats);
+      }
+    } else {
+      LockScreenService.stop();
+    }
+    
+    return () => {
+      clearInterval(interval);
+      if (status === 'finished') {
+        LockScreenService.stop();
+      }
+    };
+  }, [status, distance, duration, currentPace, avgPace, goal, pauseRun, resumeRun]);
 
   // Voice coach - announce every 0.5 km
   useEffect(() => {
@@ -119,7 +210,7 @@ export default function RunActive() {
       if (goal.autoEnd) {
         setTimeout(() => {
           stopRun();
-          navigate('/activity/save');
+          navigate('/run/summary');
         }, 2000);
       }
     }
@@ -132,7 +223,7 @@ export default function RunActive() {
 
   const handleConfirmStop = () => {
     stopRun();
-    navigate('/activity/save');
+    navigate('/run/summary');
   };
 
   const handleCancelStop = () => {
