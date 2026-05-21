@@ -32,7 +32,7 @@
             android:launchMode="singleInstance"
             android:excludeFromRecents="true"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar"
-            android:exported="true" />
+            android:exported="false" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

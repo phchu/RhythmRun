@@ -8,7 +8,8 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "vitest"
+    "test": "vitest",
+    "postinstall": "node scripts/patch-foreground-service.js"
   },
   "dependencies": {
     "@capacitor-community/text-to-speech": "^8.0.0",

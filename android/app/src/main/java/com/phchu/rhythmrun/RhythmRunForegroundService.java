@@ -21,14 +21,28 @@ public class RhythmRunForegroundService extends CapacitorForegroundService {
             String action = intent.getAction();
             Log.d(TAG, "Broadcast received: " + action);
             if (Intent.ACTION_SCREEN_OFF.equals(action) || Intent.ACTION_SCREEN_ON.equals(action)) {
-                // Launch LockScreenActivity
-                Intent lockIntent = new Intent(context, LockScreenActivity.class);
-                lockIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK |
-                        Intent.FLAG_ACTIVITY_SINGLE_INSTANCE |
-                        Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-                context.startActivity(lockIntent);
+                // Securely trigger the Notification Full-Screen Intent (FSI) from the background
+                // by restarting/updating the foreground service with the current stats.
+                // This forces Android to launch LockScreenActivity using FSI.
+                Intent startIntent = new Intent(context, RhythmRunForegroundService.class);
+                startIntent.setAction("start");
+                startIntent.putExtra("distance", currentDistance);
+                startIntent.putExtra("duration", currentDuration);
+                startIntent.putExtra("pace", currentPace);
+                startIntent.putExtra("title", "RhythmRun");
+                startIntent.putExtra("description", "配速: " + currentPace + " | 距離: " + currentDistance + " km");
                 
-                // Immediately broadcast current stats to the newly launched activity
+                try {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        context.startForegroundService(startIntent);
+                    } else {
+                        context.startService(startIntent);
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "Failed to re-trigger FSI: " + e.getMessage());
+                }
+                
+                // Immediately broadcast current stats to the active lock screen activity
                 sendStatsBroadcast(context);
             }
         }
@@ -43,7 +57,12 @@ public class RhythmRunForegroundService extends CapacitorForegroundService {
         IntentFilter filter = new IntentFilter();
         filter.addAction(Intent.ACTION_SCREEN_OFF);
         filter.addAction(Intent.ACTION_SCREEN_ON);
-        registerReceiver(screenReceiver, filter);
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(screenReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
+        } else {
+            registerReceiver(screenReceiver, filter);
+        }
     }
 
     @Override
@@ -68,10 +87,12 @@ public class RhythmRunForegroundService extends CapacitorForegroundService {
     @Override
     public void onDestroy() {
         Log.d(TAG, "RhythmRunForegroundService destroyed");
-        try {
-            unregisterReceiver(screenReceiver);
-        } catch (Exception e) {
-            // Ignore
+        if (screenReceiver != null) {
+            try {
+                unregisterReceiver(screenReceiver);
+            } catch (Exception e) {
+                // Ignore
+            }
         }
         super.onDestroy();
     }
@@ -82,8 +103,7 @@ public class RhythmRunForegroundService extends CapacitorForegroundService {
         updateIntent.putExtra("duration", currentDuration);
         updateIntent.putExtra("pace", currentPace);
         
-        // Since we registered LockScreenActivity receiver as non-exported,
-        // we specify our application ID or set package to avoid security restrictions.
+        // Specify package to avoid security restrictions and target only our app
         updateIntent.setPackage(context.getPackageName());
         context.sendBroadcast(updateIntent);
     }
