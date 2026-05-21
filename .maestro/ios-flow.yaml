@@ -1,10 +1,19 @@
 appId: com.phchu.rhythmrun
 ---
-- launchApp
+- launchApp:
+    clearState: true
+    permissions:
+      location: inuse
 - assertVisible: "活動"
 
 # 1. 點擊導覽列中的「跑步」分頁
 - tapOn: "跑步"
+
+# 處理 iOS 定位權限彈窗（若出現）
+- tapOn:
+    text: "Allow"
+    optional: true
+
 - assertVisible: "Start"
 
 # 2. 點擊「Start」按鈕開始運動

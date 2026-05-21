@@ -1,6 +1,7 @@
 appId: com.phchu.rhythmrun
 ---
-- launchApp
+- launchApp:
+    clearState: true
 - assertVisible: "Start Run"
 
 # 1. 點擊開始跑步，驗證狀態改變
