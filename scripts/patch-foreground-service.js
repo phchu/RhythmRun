@@ -10,20 +10,12 @@ if (fs.existsSync(pluginFilePath)) {
   let content = fs.readFileSync(pluginFilePath, 'utf8');
   let updated = false;
 
-  // Replace startService Intent target
-  if (content.includes('new Intent(activity, CapacitorForegroundService.class)')) {
+  // Replace startService and stopService Intent targets using Class.forName reflection to bypass compile-time dependency
+  const targetPattern = /Intent intent = new Intent\(activity,\s*CapacitorForegroundService\.class\)/g;
+  if (content.match(targetPattern) || content.includes('CapacitorForegroundService.class')) {
     content = content.replace(
-      /new Intent\(activity,\s*CapacitorForegroundService\.class\)/g,
-      'new Intent(activity, com.phchu.rhythmrun.RhythmRunForegroundService.class)'
-    );
-    updated = true;
-  }
-
-  // Double check any other CapacitorForegroundService.class references
-  if (content.includes('Intent(activity,CapacitorForegroundService.class)')) {
-    content = content.replace(
-      /Intent\(activity,CapacitorForegroundService\.class\)/g,
-      'Intent(activity, com.phchu.rhythmrun.RhythmRunForegroundService.class)'
+      targetPattern,
+      `Class<?> serviceClass;\n        try {\n            serviceClass = Class.forName("com.phchu.rhythmrun.RhythmRunForegroundService");\n        } catch (ClassNotFoundException e) {\n            serviceClass = CapacitorForegroundService.class;\n        }\n        Intent intent = new Intent(activity, serviceClass)`
     );
     updated = true;
   }
