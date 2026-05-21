@@ -124,7 +124,8 @@ export const LockScreenService = {
                         { text: '{{distance}}' },
                         { fontSize: 32 },
                         { fontWeight: 'black' },
-                        { color: '#FFFFFF' }
+                        { color: '#FFFFFF' },
+                        { monospacedDigit: true }
                       ]
                     },
                     {
@@ -154,7 +155,8 @@ export const LockScreenService = {
                         { text: '{{pace}}' },
                         { fontSize: 24 },
                         { fontWeight: 'bold' },
-                        { color: '#FFFFFF' }
+                        { color: '#FFFFFF' },
+                        { monospacedDigit: true }
                       ]
                     },
                     {
@@ -202,7 +204,8 @@ export const LockScreenService = {
                 { text: '{{distance}} 公里' },
                 { fontSize: 15 },
                 { fontWeight: 'bold' },
-                { color: '#FFFFFF' }
+                { color: '#FFFFFF' },
+                { monospacedDigit: true }
               ]
             },
             center: {
@@ -211,7 +214,8 @@ export const LockScreenService = {
                 { text: '{{duration}}' },
                 { fontSize: 16 },
                 { fontWeight: 'bold' },
-                { color: '#30D158' }
+                { color: '#30D158' },
+                { monospacedDigit: true }
               ]
             },
             bottom: {
@@ -247,7 +251,8 @@ export const LockScreenService = {
               { text: '{{distance}}' },
               { fontSize: 12 },
               { fontWeight: 'bold' },
-              { color: '#30D158' }
+              { color: '#30D158' },
+              { monospacedDigit: true }
             ]
           },
           minimal: {
