@@ -1,21 +1,25 @@
 appId: com.phchu.rhythmrun
 ---
 - launchApp
-- assertVisible: "Start Run"
+- assertVisible: "活動"
 
-# 1. 點擊開始跑步
-- tapOn: "Start Run"
+# 1. 點擊導覽列中的「跑步」分頁
+- tapOn: "跑步"
+- assertVisible: "Start"
+
+# 2. 點擊「Start」按鈕開始運動
+- tapOn: "Start"
 - evalScript: "java.lang.Thread.sleep(1000)"
 
-# 2. 模擬退回桌面（以觸發 iOS Live Activity）
+# 3. 模擬退回桌面以觸發 iOS Live Activity
 - pressKey: "home"
 - evalScript: "java.lang.Thread.sleep(2000)"
 
-# 3. 在 iOS 模擬器中下拉通知中心 / 鎖屏畫面
+# 4. 在 iOS 模擬器中下拉通知中心顯示 Live Activity
 - swipe:
     start: 50%,0%
     end: 50%,80%
 - evalScript: "java.lang.Thread.sleep(1500)"
 
-# 4. 截圖以視覺化確認小工具中 distance & pace 之 monospacedDigit 渲染是否完全正確且無抖動
+# 5. 截圖以視覺化驗證 Live Activity 小工具中的 monospacedDigit 渲染效果
 - takeScreenshot: ios-live-activity-verification
