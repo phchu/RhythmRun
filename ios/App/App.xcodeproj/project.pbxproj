@@ -15,6 +15,9 @@
 		504EC30F1FED79650016851F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 504EC30E1FED79650016851F /* Assets.xcassets */; };
 		504EC3121FED79650016851F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 504EC3101FED79650016851F /* LaunchScreen.storyboard */; };
 		50B271D11FEDC1A000F3C39B /* public in Resources */ = {isa = PBXBuildFile; fileRef = 50B271D01FEDC1A000F3C39B /* public */; };
+		7DABD09A310E4534A81A09EB /* LiveActivities.appex in Copy Files */ = {isa = PBXBuildFile; fileRef = ADAAE618ADFC46BC9B4CCA3E /* LiveActivities.appex */; };
+		475B2EB598804B7E93A9E277 /* LiveActivitiesBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E62F182F5604F1EB3105F8E /* LiveActivitiesBundle.swift */; };
+		37E2D76639C74E7190638AB0 /* LiveActivitiesKit in Frameworks */ = {isa = PBXBuildFile; productRef = 4D22ABE82AF431CB00220037 /* LiveActivitiesKit */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -28,6 +31,8 @@
 		504EC3131FED79650016851F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		50B271D01FEDC1A000F3C39B /* public */ = {isa = PBXFileReference; lastKnownFileType = folder; path = public; sourceTree = "<group>"; };
 		958DCC722DB07C7200EA8C5F /* debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = debug.xcconfig; path = ../debug.xcconfig; sourceTree = SOURCE_ROOT; };
+		ADAAE618ADFC46BC9B4CCA3E /* LiveActivities.appex */ = {isa = PBXFileReference; name = "LiveActivities.appex"; path = "LiveActivities.appex"; sourceTree = BUILT_PRODUCTS_DIR; fileEncoding = undefined; lastKnownFileType = undefined; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; };
+		4E62F182F5604F1EB3105F8E /* LiveActivitiesBundle.swift */ = {isa = PBXFileReference; name = "LiveActivitiesBundle.swift"; path = "LiveActivitiesBundle.swift"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.swift; explicitFileType = undefined; includeInIndex = 0; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -36,6 +41,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				4D22ABE92AF431CB00220026 /* CapApp-SPM in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		957C8323F2664383A88E83FD /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				37E2D76639C74E7190638AB0 /* LiveActivitiesKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -48,6 +61,7 @@
 				958DCC722DB07C7200EA8C5F /* debug.xcconfig */,
 				504EC3061FED79650016851F /* App */,
 				504EC3051FED79650016851F /* Products */,
+				368D194A264F4511B08A90A8 /* LiveActivities */,
 			);
 			sourceTree = "<group>";
 		};
@@ -55,6 +69,7 @@
 			isa = PBXGroup;
 			children = (
 				504EC3041FED79650016851F /* App.app */,
+				ADAAE618ADFC46BC9B4CCA3E /* LiveActivities.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -74,6 +89,15 @@
 			path = App;
 			sourceTree = "<group>";
 		};
+		368D194A264F4511B08A90A8 /* LiveActivities */ = {
+			isa = PBXGroup;
+			children = (
+				4E62F182F5604F1EB3105F8E /* LiveActivitiesBundle.swift */,
+			);
+			name = LiveActivities;
+			path = LiveActivities;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -84,6 +108,7 @@
 				504EC3001FED79650016851F /* Sources */,
 				504EC3011FED79650016851F /* Frameworks */,
 				504EC3021FED79650016851F /* Resources */,
+				7EDA851DE6094E90A6DA6BFC /* Copy Files */,
 			);
 			buildRules = (
 			);
@@ -97,14 +122,33 @@
 			productReference = 504EC3041FED79650016851F /* App.app */;
 			productType = "com.apple.product-type.application";
 		};
+		EB332F725A8B428792504B11 /* "LiveActivities" */ = {
+			isa = PBXNativeTarget;
+			name = "LiveActivities";
+			productName = "LiveActivities";
+			productReference = ADAAE618ADFC46BC9B4CCA3E;
+			productType = "com.apple.product-type.app-extension";
+			buildConfigurationList = 3A7AED68D141494F90508187;
+			buildPhases = (
+				5F6511BBD60440A9A7EDE6EE /* Sources */,
+				957C8323F2664383A88E83FD /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			packageProductDependencies = (
+				4D22ABE82AF431CB00220037 /* LiveActivitiesKit */,
+			);
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
 		504EC2FC1FED79650016851F /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastSwiftUpdateCheck = 0920;
-				LastUpgradeCheck = 0920;
+				LastSwiftUpdateCheck = 920;
+				LastUpgradeCheck = 920;
 				TargetAttributes = {
 					504EC3031FED79650016851F = {
 						CreatedOnToolsVersion = 9.2;
@@ -115,6 +159,10 @@
 								enabled = 1;
 							};
 						};
+					};
+					EB332F725A8B428792504B11 = {
+						CreatedOnToolsVersion = 14.0;
+						ProvisioningStyle = Automatic;
 					};
 				};
 			};
@@ -129,12 +177,14 @@
 			mainGroup = 504EC2FB1FED79650016851F;
 			packageReferences = (
 				D4C12C0A2AAA248700AAC8A2 /* XCLocalSwiftPackageReference "CapApp-SPM" */,
+				D4C12C0A2AAA248700AAC8B3 /* XCLocalSwiftPackageReference "CapacitorLiveActivities" */,
 			);
 			productRefGroup = 504EC3051FED79650016851F /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
 				504EC3031FED79650016851F /* App */,
+				EB332F725A8B428792504B11 /* "LiveActivities" */,
 			);
 		};
 /* End PBXProject section */
@@ -161,6 +211,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		5F6511BBD60440A9A7EDE6EE /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				475B2EB598804B7E93A9E277 /* LiveActivitiesBundle.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -315,6 +373,7 @@
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
+				CODE_SIGN_ENTITLEMENTS = "App/App.entitlements";
 			};
 			name = Debug;
 		};
@@ -336,8 +395,41 @@
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
+				CODE_SIGN_ENTITLEMENTS = "App/App.entitlements";
 			};
 			name = Release;
+		};
+		FFB61A1E72B8422BB617E150 /* Debug */ = {
+			name = Debug;
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				INFOPLIST_FILE = "LiveActivities/LiveActivities-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
+				PRODUCT_NAME = "LiveActivities";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.phchu.rhythmrun.liveactivities";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				SWIFT_VERSION = 5.0;
+				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_ENTITLEMENTS = "LiveActivities/LiveActivities.entitlements";
+			};
+		};
+		8DF4E5F8B6324EAAAFC03E6D /* Release */ = {
+			name = Release;
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				INFOPLIST_FILE = "LiveActivities/LiveActivities-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
+				PRODUCT_NAME = "LiveActivities";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.phchu.rhythmrun.liveactivities";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				SWIFT_VERSION = 5.0;
+				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_ENTITLEMENTS = "LiveActivities/LiveActivities.entitlements";
+			};
 		};
 /* End XCBuildConfiguration section */
 
@@ -360,12 +452,25 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		3A7AED68D141494F90508187 /* Build configuration list for PBXNativeTarget "LiveActivities" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FFB61A1E72B8422BB617E150 /* Debug */,
+				8DF4E5F8B6324EAAAFC03E6D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
 		D4C12C0A2AAA248700AAC8A2 /* XCLocalSwiftPackageReference "CapApp-SPM" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = "CapApp-SPM";
+		};
+		D4C12C0A2AAA248700AAC8B3 /* XCLocalSwiftPackageReference "CapacitorLiveActivities" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "../../node_modules/capacitor-live-activities";
 		};
 /* End XCLocalSwiftPackageReference section */
 
@@ -375,7 +480,26 @@
 			package = D4C12C0A2AAA248700AAC8A2 /* XCLocalSwiftPackageReference "CapApp-SPM" */;
 			productName = "CapApp-SPM";
 		};
+		4D22ABE82AF431CB00220037 /* LiveActivitiesKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D4C12C0A2AAA248700AAC8B3 /* XCLocalSwiftPackageReference "CapacitorLiveActivities" */;
+			productName = "LiveActivitiesKit";
+		};
 /* End XCSwiftPackageProductDependency section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		7EDA851DE6094E90A6DA6BFC /* Copy Files */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7DABD09A310E4534A81A09EB /* LiveActivities.appex in Copy Files */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			name = "Copy Files";
+			dstPath = "";
+			dstSubfolderSpec = 13;
+		};
+/* End PBXCopyFilesBuildPhase section */
 	};
 	rootObject = 504EC2FC1FED79650016851F /* Project object */;
 }

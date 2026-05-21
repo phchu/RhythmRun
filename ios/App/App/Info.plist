@@ -2,12 +2,12 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <key>CAPACITOR_DEBUG</key>
+	<key>CAPACITOR_DEBUG</key>
 	<string>$(CAPACITOR_DEBUG)</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-        <string>RhythmRun</string>
+	<string>RhythmRun</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -24,6 +24,19 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>RhythmRun 需要存取您的位置，以便在背景持續記錄您的跑步軌跡與精準數據。</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>即使 App 在背景運行，我們也需要位置資訊來記錄您的完整路徑。</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>RhythmRun 需要位置權限來追蹤您的運動路徑與距離。</string>
+	<key>NSSupportsLiveActivities</key>
+	<true/>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
+		<string>audio</string>
+	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
@@ -47,16 +60,5 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
-	<key>UIBackgroundModes</key>
-	<array>
-		<string>location</string>
-		<string>audio</string>
-	</array>
-	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>RhythmRun 需要存取您的位置，以便在背景持續記錄您的跑步軌跡與精準數據。</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>RhythmRun 需要位置權限來追蹤您的運動路徑與距離。</string>
-	<key>NSLocationAlwaysUsageDescription</key>
-	<string>即使 App 在背景運行，我們也需要位置資訊來記錄您的完整路徑。</string>
 </dict>
 </plist>
