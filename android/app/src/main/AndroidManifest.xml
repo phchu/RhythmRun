@@ -44,11 +44,11 @@
                 android:resource="@xml/file_paths"></meta-data>
         </provider>
         <service
-            android:name="me.paschalis.capfgservice.CapacitorForegroundService"
+            android:name="com.phchu.rhythmrun.RhythmRunForegroundService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="dataSync"
-            tools:replace="android:exported,android:foregroundServiceType" />
+            tools:replace="android:name,android:exported,android:foregroundServiceType" />
     </application>
 
     <!-- Permissions -->
