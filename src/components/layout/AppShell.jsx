@@ -9,10 +9,13 @@ import RunSummary from '../run/RunSummary';
 import RunDetail from '../activity/RunDetail';
 import RhythmTab from '../rhythm/RhythmTab';
 import SettingsTab from '../settings/SettingsTab';
+import DebugScreen from '../settings/DebugScreen';
+import RecoveryOverlay from './RecoveryOverlay';
 
 export default function AppShell() {
   return (
     <div className="flex flex-col min-h-screen w-full bg-bg-primary">
+      <RecoveryOverlay />
       <main className="flex-1 pb-20">
         <Routes>
           <Route path="/" element={<ActivityTab />} />
@@ -23,6 +26,7 @@ export default function AppShell() {
           <Route path="/activity/:id" element={<RunDetail />} />
           <Route path="/rhythm" element={<RhythmTab />} />
           <Route path="/settings" element={<SettingsTab />} />
+          <Route path="/debug" element={<DebugScreen />} />
         </Routes>
       </main>
       <TabBar />

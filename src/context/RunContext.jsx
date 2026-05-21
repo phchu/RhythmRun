@@ -19,6 +19,7 @@ export const RunProvider = ({ children }) => {
   const [currentPace, setCurrentPace] = useState(null); // sec/km
   const [currentSplitStart, setCurrentSplitStart] = useState(0); // time when current km started
   const [goal, setGoal] = useState({ type: 'none', value: 0, autoEnd: false });
+  const [recoveredSession, setRecoveredSession] = useState(null);
 
   const timerRef = useRef(null);
   const startTimeRef = useRef(null);
@@ -45,6 +46,34 @@ export const RunProvider = ({ children }) => {
 
     return () => clearInterval(timerRef.current);
   }, [status]);
+
+  // On mount: check for recovered session
+  useEffect(() => {
+    const saved = localStorage.getItem('rhythmrun_active_session');
+    if (saved) {
+      try {
+        setRecoveredSession(JSON.parse(saved));
+      } catch (e) {
+        console.error('Failed to parse recovered session', e);
+      }
+    }
+  }, []);
+
+  // Auto-save active state to local storage
+  useEffect(() => {
+    if (status === 'running' || status === 'paused') {
+      const sessionData = {
+        distance,
+        duration,
+        coordinates,
+        splits,
+        currentPace,
+        goal,
+        lastKm: lastKmRef.current
+      };
+      localStorage.setItem('rhythmrun_active_session', JSON.stringify(sessionData));
+    }
+  }, [status, distance, duration, coordinates, splits, currentPace, goal]);
 
   const startRun = useCallback(() => {
     setStatus('running');
@@ -75,6 +104,7 @@ export const RunProvider = ({ children }) => {
   const stopRun = useCallback(() => {
     setStatus('stopped');
     clearInterval(timerRef.current);
+    localStorage.removeItem('rhythmrun_active_session');
   }, []);
 
   const resetRun = useCallback(() => {
@@ -86,9 +116,32 @@ export const RunProvider = ({ children }) => {
     setCurrentPace(null);
     setGoal({ type: 'none', value: 0, autoEnd: false });
     startTimeRef.current = null;
-    pausedDurationRef.current = 0;
     pauseStartRef.current = null;
     lastKmRef.current = 0;
+    localStorage.removeItem('rhythmrun_active_session');
+  }, []);
+
+  const restoreRun = useCallback((data) => {
+    setStatus('paused');
+    setDistance(data.distance || 0);
+    setDuration(data.duration || 0);
+    setCoordinates(data.coordinates || []);
+    setSplits(data.splits || []);
+    setCurrentPace(data.currentPace || null);
+    setGoal(data.goal || { type: 'none', value: 0, autoEnd: false });
+    
+    // Setup refs so that resumeRun works flawlessly
+    startTimeRef.current = Date.now();
+    pausedDurationRef.current = -(data.duration * 1000);
+    pauseStartRef.current = Date.now();
+    lastKmRef.current = data.lastKm || Math.floor(data.distance || 0);
+    
+    setRecoveredSession(null);
+  }, []);
+
+  const discardRecoveredRun = useCallback(() => {
+    localStorage.removeItem('rhythmrun_active_session');
+    setRecoveredSession(null);
   }, []);
 
   const addLocation = useCallback((location) => {
@@ -178,6 +231,7 @@ export const RunProvider = ({ children }) => {
       currentPace,
       avgPace,
       goal,
+      recoveredSession,
       // Actions
       startRun,
       pauseRun,
@@ -187,6 +241,8 @@ export const RunProvider = ({ children }) => {
       addLocation,
       getRunData,
       setGoal,
+      restoreRun,
+      discardRecoveredRun
     }}>
       {children}
     </RunContext.Provider>
