@@ -8,6 +8,9 @@
  *   CrashLogger.log('tag', 'message');  // manual breadcrumb
  */
 
+import { collection, addDoc } from 'firebase/firestore';
+import { initFirebase } from '../lib/firebase.js';
+
 const MAX_LOGS = 50;
 const STORAGE_KEY = 'rhythmrun_crash_logs';
 
@@ -101,5 +104,49 @@ export const CrashLogger = {
   export() {
     const logs = this.getLogs();
     return logs.map(l => `[${l.ts}] ${l.type}: ${JSON.stringify(l.data)}`).join('\n');
+  },
+
+  /**
+   * Sync unsynced crashes to Firestore
+   * @param {string} uid User ID
+   */
+  async syncCrashes(uid) {
+    if (!uid) return;
+    try {
+      const logs = this.getLogs();
+      const unsyncedLogs = logs.filter(log => 
+        (log.type === 'UNCAUGHT_ERROR' || log.type === 'UNHANDLED_PROMISE' || log.type === 'CONSOLE_ERROR') && 
+        !log.synced
+      );
+
+      if (unsyncedLogs.length === 0) return;
+
+      const { db } = await initFirebase();
+      if (!db) {
+        console.warn('[CrashLogger] Firestore not initialized, skipping sync.');
+        return;
+      }
+
+      const collectionRef = collection(db, 'users', uid, 'crashes');
+
+      for (const log of unsyncedLogs) {
+        try {
+          await addDoc(collectionRef, {
+            id: log.id,
+            type: log.type,
+            ts: log.ts,
+            data: log.data,
+            syncedAt: new Date().toISOString()
+          });
+          log.synced = true;
+        } catch (e) {
+          console.error('[CrashLogger] Failed to upload crash log:', e);
+        }
+      }
+
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(logs));
+    } catch (err) {
+      console.error('[CrashLogger] syncCrashes failed:', err);
+    }
   }
 };

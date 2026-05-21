@@ -9,6 +9,7 @@ import {
   signOut
 } from 'firebase/auth';
 import { initFirebase } from '../lib/firebase';
+import { CrashLogger } from '../services/CrashLogger';
 
 const AuthContext = createContext();
 
@@ -40,6 +41,11 @@ export const AuthProvider = ({ children }) => {
             setUser(currentUser);
             setAuthError(null);
             setLoading(false);
+            
+            // Sync local crash logs to Firestore
+            CrashLogger.syncCrashes(currentUser.uid).catch(err => {
+              console.error('[AuthContext] Failed to sync crashes:', err);
+            });
           } else {
             addLog("No user. Starting Anonymous Sign-in...");
             signInAnonymously(auth)
