@@ -31,3 +31,9 @@ dist-ssr
 # Firebase Private Keys
 scripts/serviceAccountKey.json
 
+# Agent internal state
+.superpowers/
+
+# Local verification artifacts
+ios-live-activity-verification.png
+
